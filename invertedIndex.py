@@ -6,12 +6,19 @@ import string
 import glob
 # import pickle to store dictionary in unreadable format of .p extension
 import pickle
+import collections
+import math
 
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 # Make a class of inverted index in which all the process is present to find inverted index
 class invertedIndex():
 	# This is an constructor which will start fetch the document word and finally will make an inverted index
 	def __init__(self):
+		self.exclude = list(string.punctuation)
+		self.exclude.append('।') 
+		print("hello")
+
+	def start():
 		# self.exclude is an array which have punctuation of string
 		self.exclude = list(string.punctuation)
 		self.exclude.append('।') #append one hindi punctuation 
@@ -146,6 +153,9 @@ class invertedIndex():
 		text = "".join(c for c in text if c not in self.exclude)
 		return text
 
+	def dotproduct(self, Qvector, Dvector):
+		return sum([x*y for x,y in zip(Qvector,Dvector)])
+
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 #An operation to find the root word by doing stemming
 #(Taken from Github)
@@ -181,10 +191,55 @@ if __name__ == "__main__":
 	indexDict = {}
 	indexDict = pickle.load(open("wordIndex.p", "rb" ))
 	print(len(indexDict))
-	while 1:
-		word = input("enter word u want posting list\n")
-		print(indexDict[word])
-		if 44 in indexDict[word].keys():
-			print('yes')
-		else:
-			print('no')
+	# while 1:
+	# 	word = input("enter word u want posting list\n")
+	# 	idf = len(indexDict[word])
+	# 	print(idf)
+	# 	for i in indexDict[word].keys():
+	# 		print("term freq in " + i + "is" + indexDict[word][i])
+	# 	#print(indexDict[word])
+	# 	if 44 in indexDict[word].keys():
+	# 		print('yes')
+	# 	else:
+	# 		print('no')
+	obj = invertedIndex()
+	query = input("enter Your Query\n")
+	query = obj.remove_punctuation(query)
+	query = obj.remove_stop_word(query)
+	query1 = set(query)
+	query1 = list(query)
+	length = len(query1)
+	docVector = collections.defaultdict(lambda: [0] * length)
+	queryVector = [0]*length
+	#print(query1)
+	N = 50691
+	for q in range(0,len(query1)):
+		Qtf = query.count(query1[q])
+		idf = math.log(N/(len(query1)))
+		queryVector[q] = Qtf * idf
+		# queryVector.insert(q,Qtf)
+
+	#print(queryVector)
+	j = 0
+	for i in query:
+		queryWord = obj.stem_word(i)
+		OccuresDocument = indexDict[queryWord]
+		df = len(OccuresDocument)
+		idf = math.log(N/df)
+		# flag =0
+		for o in OccuresDocument.keys():
+			tf = indexDict[queryWord][o]
+			w = (tf)*(idf)
+			# queryLenght.insert(i,w)
+			docVector[o][j] = w
+		j = j+1
+	docVec = sorted(docVector.items())
+
+
+	#print(docVec)
+
+	Scores=[ [obj.dotproduct(DocVec, queryVector), doc] for doc, DocVec in docVector	.items()]
+	Scores.sort(reverse = True)
+	print([x[1] for x in Scores[:20]])
+
+	#print(query[0],query[1])
