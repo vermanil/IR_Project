@@ -16,6 +16,8 @@ class invertedIndex():
 	def __init__(self):
 		self.exclude = list(string.punctuation)
 		self.exclude.append('।') 
+		self.fileName = glob.glob("hindi/*.txt")
+		self.fileName.sort()
 		print("hello")
 
 	def start():
@@ -25,9 +27,8 @@ class invertedIndex():
 		#print(exclude)
 		#open file to write
 		self.f4 = open("wordIndex.txt", 'w')
-		#read all file from the hindi folder and store in list(fileName)
-		fileName = glob.glob("hindi/*.txt")
-		fileName.sort() # sort the list to find sequence of file
+		#read all file from the hindi folder and store in list(self.fileName)
+		# sort the list to find sequence of file
 		self.doc_id = 1 
 		#self.doc_id (To store the document name with some id)
 		#self.indexDict is an dictionary to store the posting list
@@ -35,12 +36,12 @@ class invertedIndex():
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 		#we apply all the operation in one-one file which comes sequentially using loop and store it as posting list.
-		for i in range(0,len(fileName)):
+		for i in range(0,len(self.fileName)):
 			#Apply try catch because some document have invalid XML character(&""''<>) which can not parse
 			try:
-				print(fileName[i])
+				print(self.fileName[i])
 				#parse the document using ElementTree
-				tree = ET.parse(fileName[i])
+				tree = ET.parse(self.fileName[i])
 				root = tree.getroot()
 				text = ''
 				#read the content of title tag and store in self.text1 variable
@@ -60,8 +61,8 @@ class invertedIndex():
 				#self.doc_id = self.doc_id + 1
 			except:
 				#catch the error if document can not be parse
-				print(fileName[i])
-				f= open(fileName[i],'r').read()
+				print(self.fileName[i])
+				f= open(self.fileName[i],'r').read()
 				#read the content of file like substring between tag title
 				start = f.find('<title>')+len('<title>')
 				end = f.find('</title')
@@ -156,6 +157,21 @@ class invertedIndex():
 	def dotproduct(self, Qvector, Dvector):
 		return sum([x*y for x,y in zip(Qvector,Dvector)])
 
+	def getLength(self, a):
+		#print(a)
+		f= open(a,'r').read()
+		#read the content of file like substring between tag title
+		start = f.find('<title>')+len('<title>')
+		end = f.find('</title')
+		self.text1 = f[start:end]
+		#read the content of file like substring between tag content
+		start = f.find('<content>')+len('<content>')
+		end = f.find('</content')
+		self.text2 = f[start:end]
+		text = self.text1 + self.text2
+		return len(text)
+
+
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 #An operation to find the root word by doing stemming
 #(Taken from Github)
@@ -203,6 +219,8 @@ if __name__ == "__main__":
 	# 	else:
 	# 		print('no')
 	obj = invertedIndex()
+	print(obj.fileName[1])
+	print(len(obj.fileName[1]))
 	query = input("enter Your Query\n")
 	query = obj.remove_punctuation(query)
 	query = obj.remove_stop_word(query)
@@ -218,8 +236,10 @@ if __name__ == "__main__":
 		idf = math.log(N/(len(query1)))
 		queryVector[q] = Qtf * idf
 		# queryVector.insert(q,Qtf)
-
-	#print(queryVector)
+	sumQvector = sum([x for x in queryVector])
+	# print(queryVector)
+	queryVector = [(x)/sumQvector for x in queryVector]
+	# print(queryVector)
 	j = 0
 	for i in query:
 		queryWord = obj.stem_word(i)
@@ -237,9 +257,18 @@ if __name__ == "__main__":
 
 
 	#print(docVec)
+	for doc, weight in docVector.items():
+		#print(obj.fileName[doc-1])
+		docLength = obj.getLength(obj.fileName[doc-1])
+		#print(docLength)
+		for i in range(0,len(weight)):
+			#print("hello")
+			# print((docVector[doc][i]))
+			docVector[doc][i] = (docVector[doc][i])/(docLength)
+	#print(docVector)
 
-	Scores=[ [obj.dotproduct(DocVec, queryVector), doc] for doc, DocVec in docVector	.items()]
+	Scores=[ [obj.dotproduct(DocVec, queryVector), doc] for doc, DocVec in docVector.items() ]
 	Scores.sort(reverse = True)
 	print([x[1] for x in Scores[:20]])
 
-	#print(query[0],query[1])
+	#print(query[0],query[1])उत्तम हिन्दी	
