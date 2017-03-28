@@ -9,7 +9,8 @@
 import sys
 import os
 import glob
-from nltk import PorterStemmer
+# from nltk import PorterStemmer
+from porter2stemmer import Porter2Stemmer
 import collections
 import string
 import pickle
@@ -35,7 +36,7 @@ class english_Index():
 		# print("start")
 		self.english_dict = {}
 		N = len(self.fileName)
-		for i in range(0,100):
+		for i in range(0,N):
 			# print(self.fileName[i])
 			if(i%100 == 0):
 				print(i)
@@ -62,7 +63,7 @@ class english_Index():
 			text2 = self.remove_stopWord(text)
 			text2 = self.stemming(text2)
 			self.makePostingList(text2,i)	
-		print(self.english_dict['door'])
+		# print(self.english_dict['door'])
 
 	def remove_punctuation(self, text):
 		# print("remove")
@@ -83,7 +84,7 @@ class english_Index():
 
 	def stemming(self,text):
 		# print("stemming")
-		s = PorterStemmer()
+		s = Porter2Stemmer()
 		root = []
 		for w in text:
 			root.append(s.stem(w))
@@ -132,8 +133,9 @@ if __name__ == "__main__":
 		f = open("path.txt","w")
 		t = 0
 		for i in sys.argv:
+			# print(i.find("IR"))
 			if(t!=0):
-				f.write(i + "\n")
+				f.write(".." + i[32:]+ "\n")
 			t=1
 		f.close()
 	else:
@@ -185,13 +187,14 @@ if __name__ == "__main__":
 		for doc, weight in docVector.items():
 			#print(obj.fileName[doc-1])
 			docLength = obj.getLength(doc)
-			print(docLength)
+			# print(docLength)
 			for i in range(0,len(weight)):
-			# 	#print("hello")
+			# 	#print("hello")	
 			# 	# print((docVector[doc][i]))
 			 	docVector[doc][i] = (docVector[doc][i])/(docLength)
-		print(docVector)
+		# print(docVector)
 
-		Scores=[ [obj.dotProduct(DocVec, queryVector), doc] for doc, DocVec in docVector.items() ]
+		Scores=[ [doc, obj.dotProduct(DocVec, queryVector)] for doc, DocVec in docVector.items() ]
 		Scores.sort(reverse = True)
-		print([x[1] for x in Scores[:20]])
+		for x in Scores:
+			print(x)
