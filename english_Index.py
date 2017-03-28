@@ -15,6 +15,7 @@ import collections
 import string
 import pickle
 import math
+import re
 
 class english_Index():
 	def __init__(self):
@@ -28,7 +29,7 @@ class english_Index():
 			for file in os.listdir(p):
 				self.fileName.append(p + file)
 
-		print(len(self.fileName))
+		# print(len(self.fileName))
 		# print(self.fileName)
 
 
@@ -150,51 +151,74 @@ if __name__ == "__main__":
 		english_dict = pickle.load(open("englishIndex.p", "rb" ))
 		# print(len(english_dict))
 
-		query = input("enter your query\n")
-		query = obj.remove_punctuation(query)
-		query = obj.remove_stopWord(query)
-		query1 = set(query)
-		query1 = list(query)
-		length = len(query1)
-		# print(obj.stemming(query1))
-		docVector = collections.defaultdict(lambda: [0] * length)
-		queryVector = [0]*length
-		N = len(obj.fileName)
-		for q in range(0,len(query1)):
-			Qtf = query.count(query1[q])
-			idf = math.log(N/(len(query1)))
-			queryVector[q] = Qtf * idf
-		# queryVector.insert(q,Qtf)
-		sumQvector = sum([x for x in queryVector])
-		# print(queryVector)
-		queryVector = [(x)/sumQvector for x in queryVector]
-		# print(queryVector)
-		query = obj.stemming(query)
-		j = 0
-		for i in query:
-			OccuresDocument = english_dict[i]
-			df = len(OccuresDocument)
-			idf = math.log(N/df)
-			# flag =0
-			for o in OccuresDocument.keys():
-				tf = english_dict[i][o]
-				w = (tf)*(idf)
-				# queryLenght.insert(i,w)
-				docVector[o][j] = w
-			j = j+1
-		# docVec = sorted(docVector.items())
-		# print(docVector)
-		for doc, weight in docVector.items():
-			#print(obj.fileName[doc-1])
-			docLength = obj.getLength(doc)
-			# print(docLength)
-			for i in range(0,len(weight)):
-			# 	#print("hello")	
-			# 	# print((docVector[doc][i]))
-			 	docVector[doc][i] = (docVector[doc][i])/(docLength)
-		# print(docVector)
+		f = open("en.topics.126-175.2011.txt","r").read()
+		startNum = [x.start()+len("<num>") for x in re.finditer("\<num>",f)]
+		endNum = [x.start() for x in re.finditer("\</num>",f)]
+		starTitle = [x.start()+len("<title>") for x in re.finditer("\<title>",f)]
+		endTitle = [x.start() for x in re.finditer("\</title>",f)]
+		id = [f[o:p] for o,p in zip(startNum,endNum)]
+		# print(id)
+		title = [f[o:p] for o,p in zip(starTitle,endTitle)]
+		# print(title)
 
-		Scores=[ [doc, obj.dotProduct(DocVec, queryVector)] for doc, DocVec in docVector.items() ]
-		Scores.sort(reverse = True)
-		for x in Scores:
-			print(x)
+
+		# query = input("enter your query\n")
+		k=-1
+		outputFile = open("sample_run.txt", "w")
+		for n in title:
+			query = n
+			k=k+1
+			query = obj.remove_punctuation(query)
+			query = obj.remove_stopWord(query)
+			query1 = set(query)
+			query1 = list(query)
+			length = len(query1)
+			# print(obj.stemming(query1))
+			docVector = collections.defaultdict(lambda: [0] * length)
+			queryVector = [0]*length
+			N = len(obj.fileName)
+			for q in range(0,len(query1)):
+				Qtf = query.count(query1[q])
+				idf = math.log(N/(len(query1)))
+				queryVector[q] = Qtf * idf
+			# queryVector.insert(q,Qtf)
+			sumQvector = sum([x for x in queryVector])
+			# print(queryVector)
+			queryVector = [(x)/sumQvector for x in queryVector]
+			# print(queryVector)
+			query = obj.stemming(query)
+			j = 0
+			for i in query:
+				OccuresDocument = english_dict[i]
+				df = len(OccuresDocument)
+				idf = math.log(N/df)
+				# flag =0
+				for o in OccuresDocument.keys():
+					tf = english_dict[i][o]
+					w = (tf)*(idf)
+					# queryLenght.insert(i,w)
+					docVector[o][j] = w
+				j = j+1
+			# docVec = sorted(docVector.items())
+			# print(docVector)
+			for doc, weight in docVector.items():
+				#print(obj.fileName[doc-1])
+				docLength = obj.getLength(doc)
+				# print(docLength)
+				for i in range(0,len(weight)):
+				# 	#print("hello")	
+				# 	# print((docVector[doc][i]))
+				 	docVector[doc][i] = (docVector[doc][i])/(docLength)
+			# print(docVector)
+
+			Scores=[ [doc, obj.dotProduct(DocVec, queryVector)] for doc, DocVec in docVector.items() ]
+			Scores.sort(reverse = True)
+			for x in Scores:
+				asdf = [q.start() for q in re.finditer('\/',x[0])]
+				pos = asdf[len(asdf)-1] + 1
+				# print(126+k,n,x[0][30:],x[1])
+				outputFile.write(str(126+k) + " ")
+				outputFile.write("Q" + str(k) + " ")
+				outputFile.write(x[0][pos:] + " ")
+				outputFile.write(str(x[1]))
+				outputFile.write("\n")
