@@ -8,6 +8,7 @@ import glob
 import pickle
 import collections
 import math
+import os
 
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 # Make a class of inverted index in which all the process is present to find inverted index
@@ -16,11 +17,14 @@ class invertedIndex():
 	def __init__(self):
 		self.exclude = list(string.punctuation)
 		self.exclude.append('।') 
-		self.fileName = glob.glob("hindi/*.txt")
-		self.fileName.sort()
-		print("hello")
+		if(os.path.isdir("hindi/*.txt") == True):
+			self.fileName = glob.glob("hindi/*.txt")
+			self.fileName.sort()
+			print("hello")
+		else:
+			print("hindi corpus does not have file")
 
-	def start():
+	def start(self):
 		# self.exclude is an array which have punctuation of string
 		self.exclude = list(string.punctuation)
 		self.exclude.append('।') #append one hindi punctuation 
@@ -202,6 +206,8 @@ if __name__ == "__main__":
 	import os
 	if os.path.isfile("wordIndex.p") != True:
 		obj = invertedIndex()
+		if(os.path.isdir("hindi/*.txt") == True):
+			obj.start()
 		#finally dump the posting list in wordIndex.p in binary format
 		pickle.dump(obj.indexDict,open( "wordIndex.p", "wb" ))
 	indexDict = {}
@@ -219,8 +225,8 @@ if __name__ == "__main__":
 	# 	else:
 	# 		print('no')
 	obj = invertedIndex()
-	print(obj.fileName[1])
-	print(len(obj.fileName[1]))
+	# print(obj.fileName[1])
+	# print(len(obj.fileName[1]))
 	query = input("enter Your Query\n")
 	query = obj.remove_punctuation(query)
 	query = obj.remove_stop_word(query)
